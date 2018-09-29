@@ -1,0 +1,172 @@
+
+
+Distribution : Lubuntu 18.04 LTS 64 bits
+
+Configuration matériel :
+
+CPU: AMD Athlon(tm) 64 X2 Dual Core Processor 4200+ (2200 MHz)
+Memory: 1999 MB
+OS Version: Linux 4.2.0-16-generic #19-Ubuntu SMP Thu Oct 8 15:35:06 UTC 2015 x86_64
+Graphics Card Vendor: NVIDIA Corporation
+Graphics Card: GeForce 7650 GS/PCIe/SSE2
+OpenGL Version: 2.1.2 NVIDIA 304.131
+
+
+1/ Vérification du support de la virtualisation matériel.
+
+- Vérification #1 :
+
+util05@station01:~$ egrep -wo 'vmx|lm|aes' /proc/cpuinfo  | sort | uniq| sed -e 's/aes/Hardware encryption=Yes (&)/g' -e 's/lm/64 bit cpu=Yes (&)/g' -e 's/vmx/Intel hardware virtualization=Yes (&)/g'
+64 bit cpu=Yes (lm)
+util05@station01:~$ 
+
+
+- Vérification #2 :
+
+util05@station01:~$ grep --color svm /proc/cpuinfo ## for an AMD processor
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt rdtscp lm 3dnowext 3dnow rep_good nopl cpuid pni cx16 lahf_lm cmp_legacy svm extapic cr8_legacy 3dnowprefetch vmmcall
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt rdtscp lm 3dnowext 3dnow rep_good nopl cpuid pni cx16 lahf_lm cmp_legacy svm extapic cr8_legacy 3dnowprefetch vmmcall
+util05@station01:~$ 
+
+
+- Vérification #3 :
+
+util05@station01:~$ sudo apt install cpu-checker
+util05@station01:~$ sudo kvm-ok
+INFO: /dev/kvm exists
+KVM acceleration can be used
+util05@station01:~$ 
+
+
+2/ Vérification de OpenGl.
+
+util05@station01:~$ sudo apt install mesa-utils
+util05@station01:~$ glxinfo | grep '^direct rendering:'
+direct rendering: Yes
+
+
+3/ Installation de Qemu.
+
+util05@station01:~$ sudo apt-get install qemu qemu-kvm
+
+
+4/ Vérification.
+
+util05@station01:~$ qemu-system-x86_64 --version
+QEMU emulator version 2.11.1(Debian 1:2.11+dfsg-1ubuntu7.5)
+Copyright (c) 2003-2017 Fabrice Bellard and the QEMU Project developers
+util05@station01:~$ 
+
+
+5/ Installation du module de virtualisation : 
+
+util05@station01:~$ sudo modprobe kvm
+util05@station01:~$ sudo modprobe kvm-amd
+
+
+6/ Ajout de l'utilisateur au groupe 'kvm'.
+
+util05@station01:~$ sudo adduser $USER kvm
+Ajout de l'utilisateur « util05 » au groupe « kvm »...
+Ajout de l'utilisateur util05 au groupe kvm
+Fait.
+util05@station01:~$
+
+util05@station01:~/VIRTU$ sudo chown root:$USER /dev/kvm
+
+
+7/ Création du répertoire de travail.
+
+util05@station01:~$ mkdir -p VIRTU/Distrib
+util05@station01:~$ cd VIRTU/Distrib/
+util05@station01:~/VIRTU/Distrib$ 
+
+
+8/ Téléchargement de la distribution Linux légère : Lubuntu.
+
+util05@station01:~/VIRTU/Distrib$ wget -c http://cdimage.ubuntu.com/lubuntu/releases/18.04/release/lubuntu-18.04-desktop-amd64.iso
+util05@station01:~/VIRTU/Distrib
+
+
+9/ Vérification.
+
+util05@station01:~/VIRTU/Distrib$ ls -lh lubuntu-18.04-desktop-amd64.iso 
+-rwxr----- 1 util05 util05 1,1G sept. 17 13:59 lubuntu-18.04-desktop-amd64.iso
+util05@station01:~/VIRTU/Distrib
+
+util05@station01:~/VIRTU/Distrib$ cd ..
+util05@station01:~/VIRTU$
+
+
+10/ Création du répertoire des disques durs virtuels.
+
+util05@station01:~/VIRTU$ mkdir Disk
+util05@station01:~/VIRTU$ cd Disk/
+util05@station01:~/VIRTU/Disk$
+
+
+11/ Création d'un disque dur virtuel au format 'qcow2'.
+
+util05@station01:~/VIRTU/Disk$ qemu-img create -f qcow2 vda.qcow2 60G
+Formatting 'vda.qcow2', fmt=qcow2 size=64424509440 cluster_size=65536 lazy_refcounts=off refcount_bits=16
+util05@station01:~/VIRTU/Disk$ 
+
+
+12/ Vérification.
+
+util05@station01:~/VIRTU/Disk$ ls -lh vda.qcow2 
+-rw-r--r-- 1 util05 util05 193K sept. 18 21:59 vda.qcow2
+util05@station01:~/VIRTU/Disk$ 
+
+util05@station01:~/VIRTU/Disk$ cd ..
+util05@station01:~/VIRTU$ 
+
+
+13/ Lancement de l'installation de Lubuntu.
+
+util05@station01:~/VIRTU$ qemu-system-x86_64 -enable-kvm -m 2048 -sdl  -vga std -hda Disk/vda.qcow2 -cdrom Distrib/lubuntu-18.04-desktop-amd64.iso -boot d -net nic,model=rtl8139 -net user -smp 2 -localtime
+
+
+14/ Lancement de la machine virtuelle.
+
+util05@station01:~/VIRTU$ qemu-system-x86_64 -drive file=Disk/vda.qcow2,format=qcow2,index=0,media=disk -enable-kvm  -m 2048 -sdl  -vga std -net nic,model=rtl8139 -net user -smp 2 -localtime
+
+
+16/ Création d'un snapshot
+
+util05@station01:~/VIRTU$ qemu-img snapshot -c ss_1809019_1844 Disk/vda.qcow2 
+
+
+17/ Vérification.
+
+util05@station01:~/VIRTU$ qemu-img snapshot -l Disk/vda.qcow2 
+Snapshot list:
+ID        TAG                 VM SIZE                DATE       VM CLOCK
+1         ss_1809019_1844           0 2018-09-19 18:44:14   00:00:00.000
+util05@station01:~/VIRTU$ 
+
+
+
+18/ Changement de résolution d’écran
+
+Modifier : 
+
+/etc/default/grub
+
+Chercher : 
+
+GRUB_GFXMODE
+
+Remplacer par : 
+
+GRUB_GFXMODE=1024x768
+
+Action : 
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+
+
+30/ Liens.
+
+
