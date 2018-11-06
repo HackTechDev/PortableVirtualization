@@ -31,3 +31,5 @@ sudo ip link set tap0 master br0
 sleep 2
 
 sudo brctl show
+
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf >/dev/null
