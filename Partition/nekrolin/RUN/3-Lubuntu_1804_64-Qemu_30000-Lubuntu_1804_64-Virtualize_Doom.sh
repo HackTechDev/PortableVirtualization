@@ -26,12 +26,12 @@ APP=DOOM
 VDA=vda
 
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:./HOST/$H_DISTRIB/$H_VERSION/$H_PROC/QEMU/$QEVER/lib/ \
-	./HOST/$H_DISTRIB/$H_VERSION/$H_PROC/QEMU/$QEVER/qemu-3.0.0/x86_64-softmmu/qemu-system-x86_64 \
-	-drive file=../nekrovd/GUEST/$G_DISTRIB/$G_VERSION/$G_PROC/$APP/VD/$VDA.qcow2,format=qcow2,index=0,media=disk \
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:../HOST/$H_DISTRIB/$H_VERSION/$H_PROC/QEMU/$QEVER/lib/ \
+	../HOST/$H_DISTRIB/$H_VERSION/$H_PROC/QEMU/$QEVER/qemu-3.0.0/x86_64-softmmu/qemu-system-x86_64 \
+	-drive file=../../nekrovd/GUEST/$G_DISTRIB/$G_VERSION/$G_PROC/$APP/VD/$VDA.qcow2,format=qcow2,index=0,media=disk \
 	-enable-kvm  -m 2048 -sdl -vga std \
 	-soundhw hda,ac97 \
 	-net nic,macaddr=$MACADDRESS -net tap,ifname=tap0,script=no \
 	-smp 2 \
 	-rtc base=localtime -no-quit \
-	-bios HOST/LUBUNTU/1804/64/QEMU/30000/pc-bios/bios-256k.bin 
+	-bios ../HOST/LUBUNTU/1804/64/QEMU/30000/pc-bios/bios-256k.bin 
